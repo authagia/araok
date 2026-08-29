@@ -1,80 +1,87 @@
 package main
 
 import (
+	"araok/dam"
+	"bytes"
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"net/url"
-	"os"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
-const (
-	damURL         = "https://www.clubdam.com/karaokesearch/"
-	resultSelector = "div.result-wrap > ul > li"
-	userAgent      = "curl/8.21.0"
-)
-
-func main() {
-	keyword := "KING"
-
-	// URLを組み立てる
-	u, err := url.Parse(damURL)
-	if err != nil {
-		panic(err)
+func searchDam(keyword string) (dam.SearchResponse, error) {
+	payload := map[string]any{
+		"modelTypeCode": "1",
+		"serialNo":      "BA000001",
+		"keyword":       keyword,
+		"compId":        "1",
+		"authKey":       "2/Qb9R@8s*",
+		"contentsCode":  nil,
+		"serviceCode":   nil,
+		"sort":          "2",
+		"dispCount":     "100",
+		"pageNo":        "1",
 	}
 
-	query := u.Query()
-	query.Set("keyword", keyword)
-	query.Set("type", "song")
-	u.RawQuery = query.Encode()
-
-	fmt.Println("Request URL:", u.String())
-
-	req, err := http.NewRequest("GET", u.String(), nil)
+	body, err := json.Marshal(payload)
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return dam.SearchResponse{}, err
 	}
-	req.Header.Set("User-Agent", userAgent)
-	fmt.Println(req.Header)
+
+	req, err := http.NewRequest(
+		http.MethodPost,
+		dam.DamAPI,
+		bytes.NewReader(body),
+	)
+	if err != nil {
+		// panic(err)
+		return dam.SearchResponse{}, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
-	// HTTPリクエスト
-	// resp, err := http.Get(u.String())
 	if err != nil {
-		panic(err)
+		// panic(err)
+		return dam.SearchResponse{}, err
 	}
 	defer resp.Body.Close()
-	fmt.Println("URL:", u.String())
-	fmt.Println("Status:", resp.Status)
-	fmt.Println("Content-Type:", resp.Header.Get("Content-Type"))
-	fmt.Println("Content-Length:", resp.Header.Get("Content-Length"))
 
-	fmt.Println("Status:", resp.Status)
+	fmt.Println("HTTP Status:", resp.Status)
 
 	if resp.StatusCode != http.StatusOK {
-		panic(fmt.Sprintf("unexpected status code: %d", resp.StatusCode))
+		// panic(fmt.Sprintf("unexpected HTTP status: %s", resp.Status))
+		return dam.SearchResponse{}, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
 	}
 
-	// HTMLを解析
-	w := os.Stdout
-	teeReader := io.TeeReader(resp.Body, w)
-	defer io.ReadAll(teeReader)
-	doc, err := goquery.NewDocumentFromReader(teeReader)
-	// doc, err := goquery.NewDocumentFromReader(resp.Body)
+	var result dam.SearchResponse
+
+	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
 		panic(err)
 	}
 
-	// 検索結果を取得
-	results := doc.Find(resultSelector)
+	return result, nil
+}
 
-	fmt.Println("Result count:", results.Length())
+func main() {
+	keyword := "妄想感傷代償連盟"
+	result, err := searchDam(keyword)
+	if err != nil {
+		panic(err)
+	}
 
-	// 各検索結果を表示
-	results.Each(func(i int, s *goquery.Selection) {
-		fmt.Printf("\n--- Result %d ---\n", i+1)
-		fmt.Println(s.Text())
-	})
+	fmt.Println("API Status:", result.Result.StatusCode)
+	fmt.Println("Message:", result.Result.Message)
+	fmt.Println("Keyword:", result.Data.Keyword)
+	fmt.Println("Total:", result.Data.TotalCount)
+
+	for _, song := range result.List {
+		fmt.Printf(
+			"%s - %s [%s]\n",
+			song.Title,
+			song.Artist,
+			song.RequestNo,
+		)
+	}
 }
