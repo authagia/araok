@@ -84,7 +84,6 @@ func fetch(keyword string, page int) (*SearchResponse, error) {
 
 	body, err := json.Marshal(payload)
 	if err != nil {
-		// panic(err)
 		return nil, err
 	}
 
@@ -94,7 +93,6 @@ func fetch(keyword string, page int) (*SearchResponse, error) {
 		bytes.NewReader(body),
 	)
 	if err != nil {
-		// panic(err)
 		return nil, err
 	}
 
@@ -102,15 +100,11 @@ func fetch(keyword string, page int) (*SearchResponse, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		// panic(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	// fmt.Println("HTTP Status:", resp.Status)
-
 	if resp.StatusCode != http.StatusOK {
-		// panic(fmt.Sprintf("unexpected HTTP status: %s", resp.Status))
 		return nil, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
 	}
 
@@ -136,7 +130,6 @@ func fetchAll(prefetchResult *SearchResponse) ([]Song, error) {
 		fmt.Printf("\r [DAM] Fetching %3d/%-3d page", p, totalPage)
 		resp, err := fetch(keyword, p+1)
 		if err != nil {
-			// return nil, err
 			fmt.Fprintln(os.Stderr, err)
 			continue
 		}

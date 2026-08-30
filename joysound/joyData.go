@@ -46,24 +46,14 @@ func DecodeListInfo(s string) (*ListInfo, error) {
 	// marker 内の `{` の位置
 	open := start + strings.Index(marker, "{")
 
-	// JSON文字列内のエスケープも考慮して、対応する `}` を探す
 	depth := 0
 	inString := false
-	// escaped := false
 	close := -1
 
 	for i := open; i < len(s); i++ {
 		c := s[i]
 
 		if inString {
-			// if escaped {
-			// 	escaped = false
-			// 	continue
-			// }
-			// if c == '\\' {
-			// 	escaped = true
-			// 	continue
-			// }
 			if c == '"' {
 				inString = false
 			}
@@ -116,24 +106,14 @@ func DecodePagination(s string) (*Pagination, error) {
 	// marker 内の `{` の位置
 	open := start + strings.Index(marker, "{")
 
-	// JSON文字列内のエスケープも考慮して、対応する `}` を探す
 	depth := 0
 	inString := false
-	// escaped := false
 	close := -1
 
 	for i := open; i < len(s); i++ {
 		c := s[i]
 
 		if inString {
-			// if escaped {
-			// 	escaped = false
-			// 	continue
-			// }
-			// if c == '\\' {
-			// 	escaped = true
-			// 	continue
-			// }
 			if c == '"' {
 				inString = false
 			}
@@ -175,6 +155,8 @@ func DecodePagination(s string) (*Pagination, error) {
 	return &result, nil
 }
 
+// TODO Nextコンポーネントの解析を共通化
+
 func fetch(keyword string, page int) (*goquery.Selection, error) {
 	u, err := url.Parse(JoysoundURL)
 	if err != nil {
@@ -214,9 +196,6 @@ func fetch(keyword string, page int) (*goquery.Selection, error) {
 		return nil, fmt.Errorf("Expected exactly 1 script tag matches, but %d matched.", l)
 	}
 	return results, nil
-	// pg, err := DecodePagination(results.Text())
-	// fmt.Println(pg)
-	// return DecodeListInfo(results.Text())
 }
 
 func prefetch(keyword string) (*Pagination, error) {
@@ -236,14 +215,12 @@ func fetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 
 		resp, err := fetch(keyword, p)
 		if err != nil {
-			// return nil, err
 			fmt.Fprintln(os.Stderr, err)
 
 			continue
 		}
 		li, err := DecodeListInfo(resp.Text())
 		if err != nil {
-			// return nil, err
 			fmt.Fprintln(os.Stderr, err)
 			continue
 		}
