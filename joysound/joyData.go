@@ -219,7 +219,7 @@ func fetch(keyword string, page int) (*goquery.Selection, error) {
 	// return DecodeListInfo(results.Text())
 }
 
-func Prefetch(keyword string) (*Pagination, error) {
+func prefetch(keyword string) (*Pagination, error) {
 	resp, err := fetch(keyword, 1)
 	if err != nil {
 		return nil, err
@@ -228,7 +228,7 @@ func Prefetch(keyword string) (*Pagination, error) {
 
 }
 
-func FetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
+func fetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 	result := &ListInfo{}
 	totalPage := pg.TotalPages
 	for p := 1; p <= totalPage; p++ {
@@ -254,11 +254,9 @@ func FetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 }
 
 func Search(keyword string) (*ListInfo, error) {
-	pagination, err := Prefetch(keyword)
+	pagination, err := prefetch(keyword)
 	if err != nil {
 		return nil, err
 	}
-	return FetchAll(keyword, pagination)
+	return fetchAll(keyword, pagination)
 }
-
-// TODO: make Prefetch and FetchAll private

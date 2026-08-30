@@ -124,11 +124,11 @@ func fetch(keyword string, page int) (*SearchResponse, error) {
 	return &result, nil
 }
 
-func Prefetch(keyword string) (*SearchResponse, error) {
+func prefetch(keyword string) (*SearchResponse, error) {
 	return fetch(keyword, 1)
 }
 
-func FetchAll(prefetchResult *SearchResponse) ([]Song, error) {
+func fetchAll(prefetchResult *SearchResponse) ([]Song, error) {
 	keyword := prefetchResult.Data.Keyword
 	songs := prefetchResult.List
 	totalPage := prefetchResult.Data.PageCount
@@ -147,11 +147,9 @@ func FetchAll(prefetchResult *SearchResponse) ([]Song, error) {
 }
 
 func Search(keyword string) ([]Song, error) {
-	prefetchResult, err := Prefetch(keyword)
+	prefetchResult, err := prefetch(keyword)
 	if err != nil {
 		return nil, err
 	}
-	return FetchAll(prefetchResult)
+	return fetchAll(prefetchResult)
 }
-
-// TODO: make Prefetch and FetchAll private
