@@ -131,7 +131,9 @@ func Prefetch(keyword string) (*SearchResponse, error) {
 func FetchAll(prefetchResult *SearchResponse) ([]Song, error) {
 	keyword := prefetchResult.Data.Keyword
 	songs := prefetchResult.List
-	for p := 2; p <= prefetchResult.Data.PageCount; p++ {
+	totalPage := prefetchResult.Data.PageCount
+	for p := 2; p <= totalPage; p++ {
+		fmt.Printf("\r [DAM] Fetching %3d/%-3d page", p, totalPage)
 		resp, err := fetch(keyword, p+1)
 		if err != nil {
 			// return nil, err
@@ -140,6 +142,7 @@ func FetchAll(prefetchResult *SearchResponse) ([]Song, error) {
 		}
 		songs = append(songs, resp.List...)
 	}
+	fmt.Println("")
 	return songs, nil
 }
 

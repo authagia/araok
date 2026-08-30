@@ -230,7 +230,10 @@ func Prefetch(keyword string) (*Pagination, error) {
 
 func FetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 	result := &ListInfo{}
-	for p := 1; p <= pg.TotalPages; p++ {
+	totalPage := pg.TotalPages
+	for p := 1; p <= totalPage; p++ {
+		fmt.Printf("\r [JoySound] Fetching %3d/%-3d page", p, totalPage)
+
 		resp, err := fetch(keyword, p)
 		if err != nil {
 			// return nil, err
@@ -246,6 +249,7 @@ func FetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 		}
 		result.Append(li)
 	}
+	fmt.Println("")
 	return result, nil
 }
 
