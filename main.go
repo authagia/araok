@@ -1,28 +1,51 @@
 package main
 
 import (
+	"fmt"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
+
 	"araok/dam"
 	"araok/joysound"
-	"fmt"
-
 	"araok/matcher"
+	"araok/tui"
 )
 
 func main() {
-	songKeyword := "シャルル"
-	artistKeyword := "バルーン"
-
-	listInfo, err := joysound.Search(songKeyword)
-	if err != nil {
-		panic(err)
+	if len(os.Args) != 2 {
+		fmt.Fprintf(os.Stderr, "usage: %s <title>\n", os.Args[0])
+		os.Exit(1)
 	}
 
-	songs, err := dam.Search(songKeyword)
+	title := os.Args[1]
+
+	// ここは既存のJOYSOUND/DAM検索処理に置き換える。
+	songs, err := searchSongs(title)
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
-	fmt.Printf("Hit %d on joysound and %d on dam\n", len(listInfo.Items), len(songs))
+	model := tui.New(title, songs)
+
+	if _, err := tea.NewProgram(model).Run(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func searchSongs(title string) (matcher.Songs, error) {
+	listInfo, err := joysound.Search(title)
+	if err != nil {
+		return nil, err
+	}
+
+	songs, err := dam.Search(title)
+	if err != nil {
+		return nil, err
+	}
+
 	candidates := make([]matcher.Song, 0, len(listInfo.Items)+len(songs))
 
 	// JOYSOUND → matcher.Song
@@ -43,29 +66,5 @@ func main() {
 		})
 	}
 
-	if len(candidates) < 20 {
-		for _, cand := range candidates {
-			fmt.Printf(
-				"%-20s %s %s\n",
-				cand.Title,
-				cand.Artist,
-				cand.Service,
-			)
-		}
-		return
-	}
-
-	results := matcher.FilterByArtist(
-		candidates,
-		artistKeyword,
-	)
-
-	for _, result := range results {
-		fmt.Printf(
-			"%-20s %s %s\n",
-			result.Title,
-			result.Artist,
-			result.Service,
-		)
-	}
+	return candidates, nil
 }
