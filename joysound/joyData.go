@@ -231,7 +231,7 @@ func Prefetch(keyword string) (*Pagination, error) {
 func FetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 	result := &ListInfo{}
 	for p := 1; p <= pg.TotalPages; p++ {
-		resp, err := fetch(keyword, p+1)
+		resp, err := fetch(keyword, p)
 		if err != nil {
 			// return nil, err
 			fmt.Fprintln(os.Stderr, err)
