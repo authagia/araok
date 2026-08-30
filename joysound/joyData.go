@@ -35,7 +35,7 @@ type Pagination struct {
 	HashAnchor   string `json:"hashAnchors"`
 }
 
-func DecodeListInfo(s string) (*ListInfo, error) {
+func decodeListInfo(s string) (*ListInfo, error) {
 	const marker = `\"listInfo\":{`
 
 	start := strings.Index(s, marker)
@@ -95,7 +95,7 @@ func DecodeListInfo(s string) (*ListInfo, error) {
 	return &result, nil
 }
 
-func DecodePagination(s string) (*Pagination, error) {
+func decodePagination(s string) (*Pagination, error) {
 	const marker = `\"pagination\":{`
 
 	start := strings.Index(s, marker)
@@ -203,7 +203,7 @@ func prefetch(keyword string) (*Pagination, error) {
 	if err != nil {
 		return nil, err
 	}
-	return DecodePagination(resp.Text())
+	return decodePagination(resp.Text())
 
 }
 
@@ -219,7 +219,7 @@ func fetchAll(keyword string, pg *Pagination) (*ListInfo, error) {
 
 			continue
 		}
-		li, err := DecodeListInfo(resp.Text())
+		li, err := decodeListInfo(resp.Text())
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			continue
