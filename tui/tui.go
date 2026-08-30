@@ -140,9 +140,9 @@ func (m Model) View() string {
 	b.WriteString(header)
 	b.WriteString("\n")
 
-	b.WriteString("  ")
+	// b.WriteString("  ")
 	b.WriteString(separatorStyle.Render(
-		strings.Repeat("─", titleWidth+artistWidth+serviceWidth),
+		strings.Repeat("─", 2+titleWidth+artistWidth+serviceWidth),
 	))
 	b.WriteString("\n")
 
