@@ -4,14 +4,13 @@ import (
 	"araok/dam"
 	"araok/joysound"
 	"fmt"
-	"sort"
 
 	"araok/matcher"
 )
 
 func main() {
-	songKeyword := "NEVER"
-	artistKeyword := "こめだわら"
+	songKeyword := "シャルル"
+	artistKeyword := "バルーン"
 
 	listInfo, err := joysound.Search(songKeyword)
 	if err != nil {
@@ -23,6 +22,7 @@ func main() {
 		panic(err)
 	}
 
+	fmt.Printf("Hit %d on joysound and %d on dam\n", len(listInfo.Items), len(songs))
 	candidates := make([]matcher.Song, 0, len(listInfo.Items)+len(songs))
 
 	// JOYSOUND → matcher.Song
@@ -43,34 +43,29 @@ func main() {
 		})
 	}
 
-	m := matcher.New()
-
-	// まずアーティストで大幅に絞る。
-	candidates = m.FilterArtists(candidates, artistKeyword)
-
-	// その後、曲名を評価。
-	results := make([]matcher.Result, 0, len(candidates))
-
-	for _, song := range candidates {
-		result := m.Match(song, matcher.Query{
-			Title:  songKeyword,
-			Artist: artistKeyword,
-		})
-
-		results = append(results, result)
+	if len(candidates) < 20 {
+		for _, cand := range candidates {
+			fmt.Printf(
+				"%-20s %s %s\n",
+				cand.Title,
+				cand.Artist,
+				cand.Service,
+			)
+		}
+		return
 	}
 
-	// 曲名一致度の高い順。
-	sort.Slice(results, func(i, j int) bool {
-		return results[i].TitleScore > results[j].TitleScore
-	})
+	results := matcher.FilterByArtist(
+		candidates,
+		artistKeyword,
+	)
 
 	for _, result := range results {
 		fmt.Printf(
-			"%.3f %-20s %s\n",
-			result.TitleScore,
-			result.Song.Title,
-			result.Song.Artist,
+			"%-20s %s %s\n",
+			result.Title,
+			result.Artist,
+			result.Service,
 		)
 	}
 }
