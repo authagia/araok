@@ -4,51 +4,73 @@ import (
 	"araok/dam"
 	"araok/joysound"
 	"fmt"
+	"sort"
+
+	"araok/matcher"
 )
 
 func main() {
-	keyword := "NEVER"
+	songKeyword := "NEVER"
+	artistKeyword := "こめだわら"
 
-	listInfo, err := joysound.Search(keyword)
-	if err != nil {
-		panic(err)
-	}
-	for i, song := range listInfo.Items {
-		fmt.Printf(
-			"%s - %s [%s]\n",
-			song.Title,
-			song.Date,
-			song.Href,
-		)
-
-		if i > 50 {
-			fmt.Printf("---skip----(left %d items)\n", len(listInfo.Items)-i)
-			break
-		}
-	}
-
-	fmt.Println("----------")
-
-	result, err := dam.Search(keyword)
+	listInfo, err := joysound.Search(songKeyword)
 	if err != nil {
 		panic(err)
 	}
 
-	// fmt.Println("API Status:", result.Result.StatusCode)
-	// fmt.Println("Message:", result.Result.Message)
-	// fmt.Println("Keyword:", result.Data.Keyword)
-	// fmt.Println("Total:", result.Data.TotalCount)
+	songs, err := dam.Search(songKeyword)
+	if err != nil {
+		panic(err)
+	}
 
-	for i, song := range result {
+	candidates := make([]matcher.Song, 0, len(listInfo.Items)+len(songs))
+
+	// JOYSOUND → matcher.Song
+	for _, song := range listInfo.Items {
+		candidates = append(candidates, matcher.Song{
+			Title:   song.Title,
+			Artist:  song.Date,
+			Service: matcher.JOYSOUND,
+		})
+	}
+
+	// DAM → matcher.Song
+	for _, song := range songs {
+		candidates = append(candidates, matcher.Song{
+			Title:   song.Title,
+			Artist:  song.Artist,
+			Service: matcher.DAM,
+		})
+	}
+
+	m := matcher.New()
+
+	// まずアーティストで大幅に絞る。
+	candidates = m.FilterArtists(candidates, artistKeyword)
+
+	// その後、曲名を評価。
+	results := make([]matcher.Result, 0, len(candidates))
+
+	for _, song := range candidates {
+		result := m.Match(song, matcher.Query{
+			Title:  songKeyword,
+			Artist: artistKeyword,
+		})
+
+		results = append(results, result)
+	}
+
+	// 曲名一致度の高い順。
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].TitleScore > results[j].TitleScore
+	})
+
+	for _, result := range results {
 		fmt.Printf(
-			"%s - %s [%s]\n",
-			song.Title,
-			song.Artist,
-			song.RequestNo,
+			"%.3f %-20s %s\n",
+			result.TitleScore,
+			result.Song.Title,
+			result.Song.Artist,
 		)
-		if i > 50 {
-			fmt.Printf("---skip----(left %d items)\n", len(result)-i)
-			break
-		}
 	}
 }

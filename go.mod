@@ -2,7 +2,10 @@ module araok
 
 go 1.27.0
 
-require github.com/PuerkitoBio/goquery v1.13.0
+require (
+	github.com/PuerkitoBio/goquery v1.13.0
+	golang.org/x/text v0.41.0
+)
 
 require (
 	github.com/andybalholm/cascadia v1.3.4 // indirect
