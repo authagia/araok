@@ -39,9 +39,7 @@ func searchJoysound(keyword string) (*joysound.ListInfo, error) {
 		return nil, err
 	}
 
-	// TODO: ここでHTMLを解析する
 	results := doc.Find(
-		// "section > div > ol > li",
 		`script`,
 	).FilterFunction(func(i int, s *goquery.Selection) bool {
 		code := strings.TrimSpace(s.Text())
@@ -61,7 +59,7 @@ func searchDam(keyword string) (*dam.SearchResponse, error) {
 		"serialNo":      "BA000001",
 		"keyword":       keyword,
 		"compId":        "1",
-		"authKey":       "2/Qb9R@8s*",
+		"authKey":       "2/Qb9R@8s*", //https://www.clubdam.com/assets/dkcommon/js/karaokesearch.js
 		"contentsCode":  nil,
 		"serviceCode":   nil,
 		"sort":          "2",
@@ -72,7 +70,7 @@ func searchDam(keyword string) (*dam.SearchResponse, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		// panic(err)
-		return dam.SearchResponse{}, err
+		return nil, err
 	}
 
 	req, err := http.NewRequest(
@@ -82,7 +80,7 @@ func searchDam(keyword string) (*dam.SearchResponse, error) {
 	)
 	if err != nil {
 		// panic(err)
-		return dam.SearchResponse{}, err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -90,7 +88,7 @@ func searchDam(keyword string) (*dam.SearchResponse, error) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		// panic(err)
-		return dam.SearchResponse{}, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -98,17 +96,17 @@ func searchDam(keyword string) (*dam.SearchResponse, error) {
 
 	if resp.StatusCode != http.StatusOK {
 		// panic(fmt.Sprintf("unexpected HTTP status: %s", resp.Status))
-		return dam.SearchResponse{}, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
+		return nil, fmt.Errorf("unexpected HTTP status: %s", resp.Status)
 	}
 
 	var result dam.SearchResponse
 
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return result, nil
+	return &result, nil
 }
 
 func main() {
